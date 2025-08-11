@@ -1,0 +1,6 @@
+@ToriGeneration_HostAddress = http://localhost:5269
+
+GET {{ToriGeneration_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
