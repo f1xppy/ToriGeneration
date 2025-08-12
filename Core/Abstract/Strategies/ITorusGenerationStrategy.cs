@@ -10,6 +10,6 @@ namespace ToriGeneration.Core.Abstract.Strategies
 {
     public interface ITorusGenerationStrategy
     {
-        List<Torus> Generate(ToriGenerationParameters parameters);
+        List<Torus> Generate(TorusGenerationParameters parameters);
     }
 }

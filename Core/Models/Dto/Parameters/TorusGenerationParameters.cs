@@ -7,9 +7,9 @@ using ToriGeneration.Core.Models.Enums;
 
 namespace ToriGeneration.Core.Models.Dto.Parameters
 {
-    public class ToriGenerationParameters
+    public class TorusGenerationParameters
     {
-        public double? CubeEdge { get; set; }
+        public double CubeEdge { get; set; }
 
         public double MaxTorusRadius { get; set; }
 

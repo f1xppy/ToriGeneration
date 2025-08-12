@@ -14,7 +14,7 @@ namespace ToriGeneration.Core.Generators
     {
         private readonly Random random = new();
 
-        public Torus GenerateTorus(Cube cube, ToriGenerationParameters parameters)
+        public Torus GenerateTorus(Cube cube, TorusGenerationParameters parameters)
         {
             var center = new Point
             {

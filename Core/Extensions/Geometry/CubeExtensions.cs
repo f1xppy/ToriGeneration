@@ -1,0 +1,131 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using ToriGeneration.Core.Models.Dto;
+using ToriGeneration.Core.Models.Dto.Geometry;
+using ToriGeneration.Core.Models.Dto.Parameters;
+
+namespace ToriGeneration.Core.Extensions.Geometry
+{
+    public static class CubeExtensions
+    {
+        public static bool Intersects(this Cube node, Sphere sphere)
+        {
+            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius > node.Edge / 2 ||
+                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius > node.Edge / 2 ||
+                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius > node.Edge / 2;
+        }
+
+        public static bool Contains (this Cube node, Sphere sphere)
+        {
+            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius <= node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius <= node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius <= node.Edge / 2;
+        }
+
+        public static bool ContainsCenter(this Cube node, Sphere sphere)
+        {
+            return Math.Abs(sphere.Center.X - node.Center.X) <= node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Y - node.Center.Y) <= node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Z - node.Center.Z) <= node.Edge / 2;
+        }
+
+        public static bool SheresIntersectsWith(this Cube node, Sphere sphere)
+        {
+            if (!node.Contains(sphere))
+                return false;
+
+            foreach (Sphere other in node.Spheres)
+            {
+                if (sphere.IntersectsWith(other))
+                    return true;
+            }
+
+            if (!node.IsLeaf)
+            {
+                foreach (var child in node.Children)
+                {
+                    if (child.Intersects(sphere))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static void Subdivide(this Cube node)
+        {
+            if (node.NodeDepth == 1) return;
+
+            node.IsLeaf = false;
+            var centerOffset = node.Edge / 4;
+            var newEdge = node.Edge / 2;
+
+            for (int i = 0; i < 8; i++)
+            {
+                node.Children.Add(new Cube
+                {
+                    Edge = node.Edge / 2,
+                    Center = new Point
+                    {
+                        X = node.Center.X + ((i & 1) != 0 ? centerOffset : -centerOffset),
+                        Y = node.Center.Y + ((i & 2) != 0 ? centerOffset : -centerOffset),
+                        Z = node.Center.Z + ((i & 4) != 0 ? centerOffset : -centerOffset)
+                    },
+                    NodeDepth = node.NodeDepth - 1,
+                    MaxSpheresCount = node.MaxSpheresCount
+                });
+            }
+
+            foreach (var sphere in node.Spheres) 
+            { 
+                foreach (var child in node.Children)
+                {
+                    if (child.ContainsCenter(sphere))
+                    {
+                        child.Spheres.Add(sphere);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public static void InitializeNodeParameters (this Cube node, TorusGenerationParameters parameters)
+        {
+            node.MaxSpheresCount = 15;
+
+            var maxTorusMajorRadius = parameters.MaxTorusRadius - parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
+            var maxTorusMinorRadius = parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
+
+            var maxSpheresPerTorus = (int)Math.Ceiling(2 * Math.PI * maxTorusMajorRadius / maxTorusMinorRadius * 1.5);
+
+            var maxSpheresCount = maxSpheresPerTorus * parameters.TargetTorusCount;
+
+            var depth = 0;
+            var maxPerNode = 0;
+
+            while (true)
+            {
+                maxPerNode = (int)Math.Ceiling((double)maxSpheresCount / Math.Pow(8, depth));
+
+                if (maxPerNode <= node.MaxSpheresCount)
+                    break;
+
+                depth++;
+            }
+
+            node.NodeDepth = depth;
+
+            node.Center = new Point
+            {
+                X = 0,
+                Y = 0,
+                Z = 0
+            };
+            node.Edge = parameters.CubeEdge;
+        }
+    }
+}

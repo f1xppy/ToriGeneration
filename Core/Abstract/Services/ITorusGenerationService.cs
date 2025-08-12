@@ -11,6 +11,6 @@ namespace ToriGeneration.Core.Abstract.Services
 {
     public interface ITorusGenerationService
     {
-        Task<List<Torus>> GenerateAsync(ToriGenerationParameters parameters);
+        Task<List<Torus>> GenerateAsync(TorusGenerationParameters parameters);
     }
 }

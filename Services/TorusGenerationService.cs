@@ -29,7 +29,7 @@ namespace ToriGeneration.Services
             };
         }
 
-        public async Task<List<Torus>> GenerateAsync(ToriGenerationParameters parameters)
+        public async Task<List<Torus>> GenerateAsync(TorusGenerationParameters parameters)
         {
             if (!_strategies.TryGetValue(parameters.GenerationType, out var strategy))
                 throw new ArgumentException($"Unsupported generation type: {parameters.GenerationType}");
