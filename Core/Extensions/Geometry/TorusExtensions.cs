@@ -13,6 +13,7 @@ namespace ToriGeneration.Core.Extensions.Geometry
         public static void GeneratePointsOnMajorCircle(this Torus torus)
         {
             var pointsCount = Convert.ToInt32(2 * Math.PI * torus.MajorRadius / torus.MinorRadius * 1.5);
+            torus.Spheres.Clear();
 
             for (int i = 0; i < pointsCount; i++)
             {

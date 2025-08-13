@@ -5,15 +5,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToriGeneration.Core.Abstract.Services;
+using ToriGeneration.Core.Abstract.Strategies;
+using ToriGeneration.Services;
+using ToriGeneration.Services.Strategies;
 
 namespace ToriGeneration.DependencyInjector
 {
     public static class Injector
     {
-        public static IServiceCollection AddDependencyInjection(this IServiceCollection services, IConfiguration configuration,
+        public static IServiceCollection AddDependencyInjection(this IServiceCollection services,
             ServiceLifetime serviceLifetime = ServiceLifetime.Scoped)
         {
 
+            services.Add<ITorusGenerationService, TorusGenerationService>(serviceLifetime);
+
+            services.AddScoped<LinearTorusGenerationStrategy>();
+            services.AddScoped<GammaTorusGenerationStrategy>();
+            services.AddScoped<GaussTorusGenerationStrategy>();
 
             return services;
         }

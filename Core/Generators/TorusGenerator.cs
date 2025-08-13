@@ -38,7 +38,8 @@ namespace ToriGeneration.Core.Generators
                 Center = center, 
                 MajorRadius = majorRadius, 
                 MinorRadius = minorRadius, 
-                Rotation = rotation 
+                Rotation = rotation,
+                Spheres = new List<Sphere>()
             };
 
             torus.GeneratePointsOnMajorCircle();

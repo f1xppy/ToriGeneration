@@ -12,7 +12,7 @@ using ToriGeneration.Services.Strategies;
 
 namespace ToriGeneration.Services
 {
-    internal class TorusGenerationService : ITorusGenerationService
+    public class TorusGenerationService : ITorusGenerationService
     {
         private readonly Dictionary<GenerationMethod, ITorusGenerationStrategy> _strategies;
 

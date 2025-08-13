@@ -76,7 +76,9 @@ namespace ToriGeneration.Core.Extensions.Geometry
                         Z = node.Center.Z + ((i & 4) != 0 ? centerOffset : -centerOffset)
                     },
                     NodeDepth = node.NodeDepth - 1,
-                    MaxSpheresCount = node.MaxSpheresCount
+                    MaxSpheresCount = node.MaxSpheresCount,
+                    IsLeaf = true,
+                    Children = new List<Cube>()
                 });
             }
 
@@ -126,6 +128,37 @@ namespace ToriGeneration.Core.Extensions.Geometry
                 Z = 0
             };
             node.Edge = parameters.CubeEdge;
+            node.Spheres = new List<Sphere>();
+            node.Children = new List<Cube>();
+        }
+
+        public static void Insert(this Cube node, Sphere sphere)
+        {
+            if (!node.Contains(sphere))
+                return;
+
+            if (node.IsLeaf && (node.Spheres.Count < node.MaxSpheresCount))
+            {
+                node.Spheres.Add(sphere);
+                return;
+            }
+
+            if (node.IsLeaf)
+            {
+                node.Subdivide();
+            }
+
+            foreach (var child in node.Children)
+            {
+                if (child.ContainsCenter(sphere))
+                {
+                    Insert(child, sphere);
+                    return;
+                }
+            }
+
+            // Если сфера перекрывает несколько подузлов, она остаётся в текущем узле
+            node.Spheres.Add(sphere);
         }
     }
 }

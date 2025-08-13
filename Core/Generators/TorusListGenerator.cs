@@ -18,7 +18,6 @@ namespace ToriGeneration.Core.Generators
             var cubeVolume = Math.Pow(rootNode.Edge, 3);
             var currentTorusVolume = 0.0;
             var currentConcentration = 0.0;
-            var stopGeneration = false;
             var maxAttempts = 10000;
             var currentAttempts = 0;
 
@@ -66,9 +65,9 @@ namespace ToriGeneration.Core.Generators
                 while (hasIntersections && currentAttempts < maxAttempts);
 
             }
-            while (currentAttempts < maxAttempts);
+            while (currentAttempts < maxAttempts && torusList.Count < parameters.TargetTorusCount);
 
-            return torusList;
+            return torusList.Select(x => { x.Spheres.Clear(); return x; }).ToList();
         }
     }
 }

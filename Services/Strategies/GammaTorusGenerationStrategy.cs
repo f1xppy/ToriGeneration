@@ -11,7 +11,7 @@ namespace ToriGeneration.Services.Strategies
 {
     public class GammaTorusGenerationStrategy : ITorusGenerationStrategy
     {
-        public List<Torus> Generate(TorusGenerationParameters parameters)
+        public async Task<List<Torus>> Generate(TorusGenerationParameters parameters)
         {
             return new List<Torus>();
         }
