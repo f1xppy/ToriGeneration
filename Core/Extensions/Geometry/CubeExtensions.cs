@@ -14,30 +14,34 @@ namespace ToriGeneration.Core.Extensions.Geometry
     {
         public static bool Intersects(this Cube node, Sphere sphere)
         {
-            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius > node.Edge / 2 ||
-                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius > node.Edge / 2 ||
-                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius > node.Edge / 2;
+            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius >= node.Edge / 2 ||
+                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius >= node.Edge / 2 ||
+                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius >= node.Edge / 2;
         }
 
         public static bool Contains (this Cube node, Sphere sphere)
         {
-            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius <= node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius <= node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius <= node.Edge / 2;
+            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius < node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius < node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius < node.Edge / 2;
         }
 
         public static bool ContainsCenter(this Cube node, Sphere sphere)
         {
-            return Math.Abs(sphere.Center.X - node.Center.X) <= node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Y - node.Center.Y) <= node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Z - node.Center.Z) <= node.Edge / 2;
+            return Math.Abs(sphere.Center.X - node.Center.X) < node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Y - node.Center.Y) < node.Edge / 2 &&
+                   Math.Abs(sphere.Center.Z - node.Center.Z) < node.Edge / 2;
         }
 
-        public static bool SheresIntersectsWith(this Cube node, Sphere sphere)
+        public static bool NeedCheck(this Cube node, Sphere sphere)
         {
-            if (!node.Contains(sphere))
-                return false;
+            return Math.Abs(sphere.Center.X - node.Center.X) < node.Edge / 2 + sphere.Radius ||
+                   Math.Abs(sphere.Center.Y - node.Center.Y) < node.Edge / 2 + sphere.Radius ||
+                   Math.Abs(sphere.Center.Z - node.Center.Z) < node.Edge / 2 + sphere.Radius;
+        }
 
+        public static bool SpheresIntersectsWith(this Cube node, Sphere sphere)
+        {
             foreach (Sphere other in node.Spheres)
             {
                 if (sphere.IntersectsWith(other))
@@ -48,8 +52,9 @@ namespace ToriGeneration.Core.Extensions.Geometry
             {
                 foreach (var child in node.Children)
                 {
-                    if (child.Intersects(sphere))
-                        return true;
+                    if (child.NeedCheck(sphere))
+                        if (child.SpheresIntersectsWith(sphere))
+                            return true;
                 }
             }
 
@@ -78,18 +83,34 @@ namespace ToriGeneration.Core.Extensions.Geometry
                     NodeDepth = node.NodeDepth - 1,
                     MaxSpheresCount = node.MaxSpheresCount,
                     IsLeaf = true,
-                    Children = new List<Cube>()
+                    Children = new List<Cube>(),
+                    Spheres = new List<Sphere>()
                 });
             }
 
-            foreach (var sphere in node.Spheres) 
-            { 
+            // Собираем сферы для перемещения
+            var spheresToMove = new List<Sphere>();
+            foreach (var sphere in node.Spheres)
+            {
                 foreach (var child in node.Children)
                 {
-                    if (child.ContainsCenter(sphere))
+                    if (child.Contains(sphere))
+                    {
+                        spheresToMove.Add(sphere);
+                        break;
+                    }
+                }
+            }
+
+            // Перемещаем сферы в children
+            foreach (var sphere in spheresToMove)
+            {
+                node.Spheres.Remove(sphere);
+                foreach (var child in node.Children)
+                {
+                    if (child.Contains(sphere))
                     {
                         child.Spheres.Add(sphere);
-                        break;
                     }
                 }
             }
@@ -97,7 +118,7 @@ namespace ToriGeneration.Core.Extensions.Geometry
 
         public static void InitializeNodeParameters (this Cube node, TorusGenerationParameters parameters)
         {
-            node.MaxSpheresCount = 15;
+            node.MaxSpheresCount = 30;
 
             var maxTorusMajorRadius = parameters.MaxTorusRadius - parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
             var maxTorusMinorRadius = parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
@@ -106,7 +127,7 @@ namespace ToriGeneration.Core.Extensions.Geometry
 
             var maxSpheresCount = maxSpheresPerTorus * parameters.TargetTorusCount;
 
-            var depth = 0;
+            var depth = 1;
             var maxPerNode = 0;
 
             while (true)
@@ -119,7 +140,7 @@ namespace ToriGeneration.Core.Extensions.Geometry
                 depth++;
             }
 
-            node.NodeDepth = depth;
+            node.NodeDepth = depth + 1;
 
             node.Center = new Point
             {
@@ -130,13 +151,11 @@ namespace ToriGeneration.Core.Extensions.Geometry
             node.Edge = parameters.CubeEdge;
             node.Spheres = new List<Sphere>();
             node.Children = new List<Cube>();
+            node.IsLeaf = true;
         }
 
         public static void Insert(this Cube node, Sphere sphere)
         {
-            if (!node.Contains(sphere))
-                return;
-
             if (node.IsLeaf && (node.Spheres.Count < node.MaxSpheresCount))
             {
                 node.Spheres.Add(sphere);
@@ -150,9 +169,9 @@ namespace ToriGeneration.Core.Extensions.Geometry
 
             foreach (var child in node.Children)
             {
-                if (child.ContainsCenter(sphere))
+                if (child.Contains(sphere))
                 {
-                    Insert(child, sphere);
+                    child.Insert(sphere);
                     return;
                 }
             }

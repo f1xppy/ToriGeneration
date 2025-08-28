@@ -1,0 +1,18 @@
+<div class="app-container">
+  <app-loading-overlay
+                       [isLoading]="isLoading">
+  </app-loading-overlay>
+
+  <app-torus-form (formSubmit)="onFormSubmit($event)"
+                  (panelToggle)="onPanelToggle($event)"
+                  [isPanelVisible]="isPanelVisible">
+  </app-torus-form>
+
+  <!-- Three.js -->
+  <app-scene></app-scene>
+
+  <!-- Toggle button -->
+  <button class="toggle-btn" (click)="togglePanel()">
+    {{ isPanelVisible ? '◀◀ Hide' : 'Show ▶▶' }}
+  </button>
+</div>

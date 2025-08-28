@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.2191419">
+  <PropertyGroup>
+    <StartupCommand>npm start</StartupCommand>
+    <JavaScriptTestFramework>Jasmine</JavaScriptTestFramework>
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist\web\</BuildOutputFolder>
+    <SpaRoot>./</SpaRoot>
+    <DefaultItemExcludes>$(DefaultItemExcludes);node_modules\**</DefaultItemExcludes>
+    <AngularBuildCommand>build</AngularBuildCommand>
+    <AngularBuildConfiguration>iis</AngularBuildConfiguration>
+    <AngularBaseHref>/</AngularBaseHref>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.0" />
+  </ItemGroup>
+  <Target Name="BuildAngular" BeforeTargets="Build">
+    <Exec Command="npm install" WorkingDirectory="." />
+    <Exec Command="ng $(AngularBuildCommand) --configuration=$(AngularBuildConfiguration) --base-href=$(AngularBaseHref)" WorkingDirectory="." />
+    <Message Text="✅ Angular build completed successfully!" Importance="high" />
+  </Target>
+  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
+    <Exec Command="node --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Exec Command="npm install" WorkingDirectory="$(SpaRoot)" />
+  </Target>
+  <Target Name="PublishRunBuild" AfterTargets="ComputeFilesToPublish">
+    <Exec Command="npm install" WorkingDirectory="$(SpaRoot)" />
+    <Exec Command="npm run build -- --configuration production" WorkingDirectory="$(SpaRoot)" />
+    <ItemGroup>
+      <DistFiles Include="$(SpaRoot)dist\web\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <Content Include="**/*" Exclude="node_modules/**;dist/**;.angular/**;$(DefaultItemExcludes)" />
+    <None Include="web.config" />
+  </ItemGroup>
+</Project>

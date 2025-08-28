@@ -1,0 +1,135 @@
+<div class="side-panel" [class.visible]="isPanelVisible" [class.hidden]="!isPanelVisible">
+
+  <div *ngIf="errorMessage" class="error-message" style="color: red; padding: 10px; margin: 10px 0; border: 1px solid red; background-color: #ffe6e6;">
+    {{ errorMessage }}
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
+    <!-- Cube Edge -->
+    <div class="form-group">
+      <label for="cubeEdge">Cube Edge:</label>
+      <input id="cubeEdge"
+             type="number"
+             formControlName="cubeEdge"
+             placeholder="Enter cube edge"
+             step="0.1"
+             min="0.1"
+             class="form-input"
+             [class.invalid]="form.get('cubeEdge')?.invalid && form.get('cubeEdge')?.touched">
+      <div *ngIf="form.get('cubeEdge')?.invalid && form.get('cubeEdge')?.touched" class="error-message">
+        <div *ngIf="form.get('cubeEdge')?.errors?.['required']">Cube edge is required</div>
+        <div *ngIf="form.get('cubeEdge')?.errors?.['pattern']">Please enter a valid number</div>
+        <div *ngIf="form.get('cubeEdge')?.errors?.['min']">Value must be at least 0.1</div>
+      </div>
+    </div>
+
+    <!-- Min Radius -->
+    <div class="form-group">
+      <label for="min_R">Min Radius:</label>
+      <input id="min_R"
+             type="number"
+             formControlName="min_R"
+             placeholder="Enter minimum radius"
+             min="0.01"
+             step="0.01"
+             class="form-input"
+             [class.invalid]="form.get('min_R')?.invalid && form.get('min_R')?.touched">
+      <div *ngIf="form.get('min_R')?.invalid && form.get('min_R')?.touched" class="error-message">
+        <div *ngIf="form.get('min_R')?.errors?.['required']">Min radius is required</div>
+        <div *ngIf="form.get('min_R')?.errors?.['pattern']">Please enter a valid number</div>
+      </div>
+    </div>
+
+    <!-- Max Radius -->
+    <div class="form-group">
+      <label for="max_R">Max Radius:</label>
+      <input id="max_R"
+             type="number"
+             formControlName="max_R"
+             placeholder="Enter maximum radius"
+             min="0.01"
+             step="0.01"
+             class="form-input"
+             [class.invalid]="form.get('max_R')?.invalid && form.get('max_R')?.touched">
+      <div *ngIf="form.get('max_R')?.invalid && form.get('max_R')?.touched" class="error-message">
+        <div *ngIf="form.get('max_R')?.errors?.['required']">Max radius is required</div>
+        <div *ngIf="form.get('max_R')?.errors?.['pattern']">Please enter a valid number</div>
+      </div>
+    </div>
+
+    <!-- Thickness Coefficient -->
+    <div class="form-group">
+      <label for="thicknessCoefficient">Thickness Coefficient:</label>
+      <input id="thicknessCoefficient"
+             type="number"
+             formControlName="thicknessCoefficient"
+             placeholder="Enter thickness coefficient"
+             step="0.01"
+             min="0.01"
+             max="0.5"
+             class="form-input"
+             [class.invalid]="form.get('thicknessCoefficient')?.invalid && form.get('thicknessCoefficient')?.touched">
+      <div *ngIf="form.get('thicknessCoefficient')?.invalid && form.get('thicknessCoefficient')?.touched" class="error-message">
+        <div *ngIf="form.get('thicknessCoefficient')?.errors?.['required']">Thickness coefficient is required</div>
+        <div *ngIf="form.get('thicknessCoefficient')?.errors?.['pattern']">Please enter a valid number</div>
+        <div *ngIf="form.get('thicknessCoefficient')?.errors?.['max']">Value cannot exceed 0.5</div>
+      </div>
+    </div>
+
+    <!-- Target Torus Count -->
+    <div class="form-group">
+      <label for="targetTorusCount">Target Torus Count:</label>
+      <input id="targetTorusCount"
+             type="number"
+             formControlName="targetTorusCount"
+             placeholder="Enter target torus count"
+             min="1"
+             class="form-input"
+             [class.invalid]="form.get('targetTorusCount')?.invalid && form.get('targetTorusCount')?.touched">
+      <div *ngIf="form.get('targetTorusCount')?.invalid && form.get('targetTorusCount')?.touched" class="error-message">
+        <div *ngIf="form.get('targetTorusCount')?.errors?.['required']">Target torus count is required</div>
+        <div *ngIf="form.get('targetTorusCount')?.errors?.['pattern']">Please enter a valid number</div>
+        <div *ngIf="form.get('targetTorusCount')?.errors?.['min']">Value must be at least 1</div>
+      </div>
+    </div>
+
+    <!-- Generation Method -->
+    <div class="form-group">
+      <label>Select Generation Method:</label>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio"
+                 formControlName="generationMethod"
+                 value="1"
+                 class="radio-input">
+          Linear
+        </label>
+        <label class="radio-label" [class.disabled]="true">
+          <input type="radio"
+                 formControlName="generationMethod"
+                 value="2"
+                 class="radio-input disabled-radio"
+                 (change)="onRadioChange($event)">
+          Gamma
+        </label>
+        <label class="radio-label" [class.disabled]="true">
+          <input type="radio"
+                 formControlName="generationMethod"
+                 value="3"
+                 class="radio-input disabled-radio"
+                 (change)="onRadioChange($event)">
+          Gauss
+        </label>
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="submit-btn" [disabled]="form.invalid">
+      Submit
+    </button>
+
+    <button type="button" class="reset-btn" (click)="fillInitialValues()">
+      Reset
+    </button>
+  </form>
+</div>

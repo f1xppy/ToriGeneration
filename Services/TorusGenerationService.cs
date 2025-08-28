@@ -7,6 +7,7 @@ using ToriGeneration.Core.Abstract.Services;
 using ToriGeneration.Core.Abstract.Strategies;
 using ToriGeneration.Core.Models.Dto.Geometry;
 using ToriGeneration.Core.Models.Dto.Parameters;
+using ToriGeneration.Core.Models.Dto.Responses;
 using ToriGeneration.Core.Models.Enums;
 using ToriGeneration.Services.Strategies;
 
@@ -29,7 +30,7 @@ namespace ToriGeneration.Services
             };
         }
 
-        public async Task<List<Torus>> GenerateAsync(TorusGenerationParameters parameters)
+        public async Task<TorusListResponse> GenerateAsync(TorusGenerationParameters parameters)
         {
             if (!_strategies.TryGetValue(parameters.GenerationType, out var strategy))
                 throw new ArgumentException($"Unsupported generation type: {parameters.GenerationType}");

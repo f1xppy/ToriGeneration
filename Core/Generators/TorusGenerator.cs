@@ -29,9 +29,9 @@ namespace ToriGeneration.Core.Generators
 
             var rotation = new Point
             {
-                X = random.RandomDouble(-cube.Edge / 2, cube.Edge / 2),
-                Y = random.RandomDouble(-cube.Edge / 2, cube.Edge / 2),
-                Z = random.RandomDouble(-cube.Edge / 2, cube.Edge / 2)
+                X = random.RandomDouble(0, 2 * Math.PI),
+                Y = random.RandomDouble(0, 2 * Math.PI),
+                Z = random.RandomDouble(0, 2 * Math.PI)
             };
 
             var torus = new Torus { 

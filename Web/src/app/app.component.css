@@ -1,0 +1,42 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1002;
+  padding: 10px 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, left 0.3s ease;
+}
+
+  .toggle-btn:hover {
+    background: #0056b3;
+  }
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  width: 100%;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1000;
+}
+
+  .main-content h1 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .main-content p {
+    color: #666;
+  }

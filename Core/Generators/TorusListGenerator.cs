@@ -1,61 +1,97 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using ToriGeneration.Core.Extensions.Geometry;
 using ToriGeneration.Core.Models.Dto.Geometry;
 using ToriGeneration.Core.Models.Dto.Parameters;
+using ToriGeneration.Core.Models.Dto.Responses;
 
 namespace ToriGeneration.Core.Generators
 {
-    public static class TorusListGenerator
+    public class TorusListGenerator
     {
-        public static List<Torus> GenerateTorusList (TorusGenerationParameters parameters, Cube rootNode)
+        private readonly TorusGenerator _generator = new TorusGenerator();
+
+        public async Task<TorusListResponse> GenerateTorusList (TorusGenerationParameters parameters, Cube rootNode)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             var generator = new TorusGenerator();
 
             var cubeVolume = Math.Pow(rootNode.Edge, 3);
             var currentTorusVolume = 0.0;
             var currentConcentration = 0.0;
-            var maxAttempts = 10000;
+            var maxAttempts = 250;
             var currentAttempts = 0;
 
-            var torusList = new List<Torus>();
+            var torusList = new List<TorusResponse>();
             var torus = new Torus();
+
+            //var testList = new List<Torus>();
 
             do
             {
                 var hasIntersections = false;
                 do
                 {
-                    torus = generator.GenerateTorus(rootNode, parameters);
+                    torus = _generator.GenerateTorus(rootNode, parameters);
                     currentAttempts++;
 
                     hasIntersections = false;
 
                     // проверка в octree
-                    foreach (Sphere sphere in torus.Spheres)
+                    //foreach (Sphere sphere in torus.Spheres)
+                    //{
+                    //    if (!rootNode.Intersects(sphere))
+                    //    {
+                    //        if (rootNode.SpheresIntersectsWith(sphere))
+                    //        {
+                    //            hasIntersections = true;
+                    //            break;
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        hasIntersections = true;
+                    //        break;
+                    //    }
+                    //}
+                    Parallel.ForEach(torus.Spheres, (sphere, state) =>
                     {
-
                         if (!rootNode.Intersects(sphere))
                         {
-                            if (rootNode.SheresIntersectsWith(sphere))
+                            if (rootNode.SpheresIntersectsWith(sphere))
                             {
                                 hasIntersections = true;
-                                break;
+                                state.Stop();
                             }
                         }
-                    }
-
+                        else
+                        {
+                            hasIntersections = true;
+                            state.Stop();
+                        }
+                    });
 
                     if (!hasIntersections)
                     {
-                        torusList.Add(torus);
-                        foreach (Sphere sphere in torus.Spheres)
+                        torusList.Add(new TorusResponse
+                        {
+                            Center = torus.Center,
+                            MajorRadius = torus.MajorRadius,
+                            MinorRadius = torus.MinorRadius,
+                            Rotation = torus.Rotation,
+                        });
+                        //testList.Add(torus);
+                        foreach (var sphere in torus.Spheres)
                         {
                             rootNode.Insert(sphere);
-                        }
+                        };
                         currentTorusVolume += torus.MajorRadius * torus.MinorRadius * torus.MinorRadius * 2 * Math.PI * Math.PI;
                         currentConcentration = currentTorusVolume / cubeVolume;
                         currentAttempts = 0;
@@ -67,7 +103,34 @@ namespace ToriGeneration.Core.Generators
             }
             while (currentAttempts < maxAttempts && torusList.Count < parameters.TargetTorusCount);
 
-            return torusList.Select(x => { x.Spheres.Clear(); return x; }).ToList();
+            //int intersectionCount = 0;
+
+            //for (int i = 0; i < testList.Count; i++)
+            //{
+            //    for (int j = i + 1; j < testList.Count; j++)
+            //    {
+            //        foreach (var sphere1 in testList[i].Spheres)
+            //        {
+            //            foreach (var sphere2 in testList[j].Spheres)
+            //            {
+            //                if (sphere1.IntersectsWith(sphere2))
+            //                {
+            //                    intersectionCount++;
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+
+            stopwatch.Stop();
+
+            return new TorusListResponse
+            {
+                TorusList = torusList,
+                TotalCount = torusList.Count,
+                Concentration = currentConcentration,
+                ElapsedTime = stopwatch.Elapsed.ToString()
+            };
         }
     }
 }
