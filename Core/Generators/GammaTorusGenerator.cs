@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToriGeneration.Core.Abstract.Strategies;
 using ToriGeneration.Core.Extensions;
 using ToriGeneration.Core.Extensions.Geometry;
 using ToriGeneration.Core.Models.Dto.Geometry;
@@ -10,11 +11,11 @@ using ToriGeneration.Core.Models.Dto.Parameters;
 
 namespace ToriGeneration.Core.Generators
 {
-    public class TorusGenerator
+    public class GammaTorusGenerator : ITorusGenerationStrategy
     {
         private readonly Random random = new();
 
-        public Torus GenerateTorus(Cube cube, TorusGenerationParameters parameters)
+        public async Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters)
         {
             var center = new Point
             {

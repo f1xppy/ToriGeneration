@@ -6,22 +6,39 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using ToriGeneration.Core.Abstract.Generators;
+using ToriGeneration.Core.Abstract.Strategies;
 using ToriGeneration.Core.Extensions.Geometry;
 using ToriGeneration.Core.Models.Dto.Geometry;
 using ToriGeneration.Core.Models.Dto.Parameters;
 using ToriGeneration.Core.Models.Dto.Responses;
+using ToriGeneration.Core.Models.Enums;
 
 namespace ToriGeneration.Core.Generators
 {
-    public class TorusListGenerator
+    public class TorusListGenerator : ITorusListGenerator
     {
-        private readonly TorusGenerator _generator = new TorusGenerator();
+        private readonly Dictionary<GenerationMethod, ITorusGenerationStrategy> _generationStrategies;
+
+        public TorusListGenerator(
+        LinearTorusGenerator linear,
+        GammaTorusGenerator gamma,
+        GaussTorusGenerator gauss)
+        {
+            _generationStrategies = new()
+            {
+                [GenerationMethod.Linear] = linear,
+                [GenerationMethod.Gamma] = gamma,
+                [GenerationMethod.Gauss] = gauss
+            };
+        }
 
         public async Task<TorusListResponse> GenerateTorusList (TorusGenerationParameters parameters, Cube rootNode)
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var generator = new TorusGenerator();
+            if (!_generationStrategies.TryGetValue(parameters.GenerationType, out var generator))
+                throw new ArgumentException($"Unsupported generation type: {parameters.GenerationType}");
 
             var cubeVolume = Math.Pow(rootNode.Edge, 3);
             var currentTorusVolume = 0.0;
@@ -39,7 +56,7 @@ namespace ToriGeneration.Core.Generators
                 var hasIntersections = false;
                 do
                 {
-                    torus = _generator.GenerateTorus(rootNode, parameters);
+                    torus = await Task.Run(() => generator.GenerateTorus(rootNode, parameters));
                     currentAttempts++;
 
                     hasIntersections = false;

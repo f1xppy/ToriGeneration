@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using ToriGeneration.Core.Abstract.Services;
 using ToriGeneration.Core.Abstract.Strategies;
+using ToriGeneration.Core.Extensions.Geometry;
+using ToriGeneration.Core.Generators;
 using ToriGeneration.Core.Models.Dto.Geometry;
 using ToriGeneration.Core.Models.Dto.Parameters;
 using ToriGeneration.Core.Models.Dto.Responses;
 using ToriGeneration.Core.Models.Enums;
-using ToriGeneration.Services.Strategies;
+using ToriGeneration.Core.Abstract.Generators;
 
 namespace ToriGeneration.Services
 {
@@ -17,25 +19,17 @@ namespace ToriGeneration.Services
     {
         private readonly Dictionary<GenerationMethod, ITorusGenerationStrategy> _strategies;
 
-        public TorusGenerationService(
-        LinearTorusGenerationStrategy linear,
-        GammaTorusGenerationStrategy gamma,
-        GaussTorusGenerationStrategy gauss)
+        private readonly ITorusListGenerator _torusListGenerator;
+        public TorusGenerationService(ITorusListGenerator torusListGenerator)
         {
-            _strategies = new()
-            {
-                [GenerationMethod.Linear] = linear,
-                [GenerationMethod.Gamma] = gamma,
-                [GenerationMethod.Gauss] = gauss
-            };
+            _torusListGenerator = torusListGenerator;
         }
 
         public async Task<TorusListResponse> GenerateAsync(TorusGenerationParameters parameters)
         {
-            if (!_strategies.TryGetValue(parameters.GenerationType, out var strategy))
-                throw new ArgumentException($"Unsupported generation type: {parameters.GenerationType}");
-
-            return await Task.Run(() => strategy.Generate(parameters));
+            var rootNode = new Cube();
+            rootNode.InitializeNodeParameters(parameters);
+            return await _torusListGenerator.GenerateTorusList(parameters, rootNode);
         }
     }
 }

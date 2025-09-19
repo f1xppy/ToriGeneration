@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToriGeneration.Core.Abstract.Generators;
 using ToriGeneration.Core.Abstract.Services;
 using ToriGeneration.Core.Abstract.Strategies;
+using ToriGeneration.Core.Generators;
 using ToriGeneration.Services;
-using ToriGeneration.Services.Strategies;
 
 namespace ToriGeneration.DependencyInjector
 {
@@ -20,9 +21,11 @@ namespace ToriGeneration.DependencyInjector
 
             services.Add<ITorusGenerationService, TorusGenerationService>(serviceLifetime);
 
-            services.AddScoped<LinearTorusGenerationStrategy>();
-            services.AddScoped<GammaTorusGenerationStrategy>();
-            services.AddScoped<GaussTorusGenerationStrategy>();
+            services.Add<ITorusListGenerator, TorusListGenerator>(serviceLifetime);
+
+            services.AddScoped<LinearTorusGenerator>();
+            services.AddScoped<GammaTorusGenerator>();
+            services.AddScoped<GaussTorusGenerator>();
 
             return services;
         }

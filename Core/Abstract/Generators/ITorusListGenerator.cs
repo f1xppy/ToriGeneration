@@ -7,10 +7,10 @@ using ToriGeneration.Core.Models.Dto.Geometry;
 using ToriGeneration.Core.Models.Dto.Parameters;
 using ToriGeneration.Core.Models.Dto.Responses;
 
-namespace ToriGeneration.Core.Abstract.Strategies
+namespace ToriGeneration.Core.Abstract.Generators
 {
-    public interface ITorusGenerationStrategy
+    public interface ITorusListGenerator
     {
-        Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters);
+        Task<TorusListResponse> GenerateTorusList(TorusGenerationParameters parameters, Cube rootNode);
     }
 }
