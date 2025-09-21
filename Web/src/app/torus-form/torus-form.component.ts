@@ -22,6 +22,11 @@ export class TorusFormComponent {
   form: FormGroup;
   errorMessage: string = '';
 
+  torusCount!: number;
+  totalConcentration!: string;
+  elapsedTime!: string;
+  showInfo: boolean = false;
+
   @Input() isPanelVisible: boolean = true;
   @Output() formSubmit = new EventEmitter<TorusFormData>();
   @Output() panelToggle = new EventEmitter<boolean>();

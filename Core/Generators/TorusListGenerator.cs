@@ -146,7 +146,7 @@ namespace ToriGeneration.Core.Generators
                 TorusList = torusList,
                 TotalCount = torusList.Count,
                 Concentration = currentConcentration,
-                ElapsedTime = stopwatch.Elapsed.ToString()
+                ElapsedTime = stopwatch.Elapsed
             };
         }
     }

@@ -14,6 +14,6 @@ namespace ToriGeneration.Core.Models.Dto.Responses
 
         public double Concentration { get; set; }
 
-        public string ElapsedTime { get; set; } 
+        public TimeSpan ElapsedTime { get; set; } 
     }
 }

@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Time } from '@angular/common';
 import { SceneComponent } from './scene/scene.component';
 import { HttpClient } from '@angular/common/http';
 import { Torus } from '../models/torus';
@@ -50,6 +50,11 @@ export class AppComponent {
           if (this.sceneComponent) {
             this.sceneComponent.vizualizeTori(this.torusList, formData.cubeEdge);
           }
+
+          this.torusFormComponent.torusCount = response.totalCount;
+          this.torusFormComponent.totalConcentration = response.concentration.toFixed(3);
+          this.torusFormComponent.elapsedTime = response.elapsedTime;
+          this.torusFormComponent.showInfo = true;
         },
         error: (error) => {
           this.isLoading = false;
