@@ -9,12 +9,12 @@ namespace ToriGeneration.Core.Models.Dto.Responses
 {
     public class TorusResponse
     {
-        public Point Center { get; set; }
+        public required Point Center { get; set; }
 
-        public double MajorRadius { get; set; }
+        public required double MajorRadius { get; set; }
 
-        public double MinorRadius { get; set; }
+        public required double MinorRadius { get; set; }
 
-        public Point Rotation { get; set; }
+        public required Point Rotation { get; set; }
     }
 }

@@ -11,8 +11,8 @@ namespace ToriGeneration.Core.Models.Dto.Geometry
     /// </summary>
     public class Sphere
     {
-        public Point Center { get; set; }
+        public required Point Center { get; set; }
 
-        public double Radius { get; set; }
+        public required double Radius { get; set; }
     }
 }

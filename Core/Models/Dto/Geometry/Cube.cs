@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,11 @@ namespace ToriGeneration.Core.Models.Dto.Geometry
     {
         public double Edge {  get; set; }
 
-        public Point Center { get; set; }
+        public required Point Center { get; set; }
 
-        public List<Sphere> Spheres { get; set; }
+        public required List<Sphere> Spheres { get; set; }
 
-        public List<Cube> Children { get; set; }
+        public required List<Cube> Children { get; set; }
 
         public bool IsLeaf { get; set; }
 

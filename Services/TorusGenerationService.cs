@@ -17,8 +17,6 @@ namespace ToriGeneration.Services
 {
     public class TorusGenerationService : ITorusGenerationService
     {
-        private readonly Dictionary<GenerationMethod, ITorusGenerationStrategy> _strategies;
-
         private readonly ITorusListGenerator _torusListGenerator;
         public TorusGenerationService(ITorusListGenerator torusListGenerator)
         {
@@ -27,7 +25,11 @@ namespace ToriGeneration.Services
 
         public async Task<TorusListResponse> GenerateAsync(TorusGenerationParameters parameters)
         {
-            var rootNode = new Cube();
+            var rootNode = new Cube { 
+                Center = new Point { X = 0, Y = 0, Z = 0 }, 
+                Children = [],
+                Spheres = [],
+            };
             rootNode.InitializeNodeParameters(parameters);
             return await _torusListGenerator.GenerateTorusList(parameters, rootNode);
         }

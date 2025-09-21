@@ -67,7 +67,6 @@ namespace ToriGeneration.Core.Extensions.Geometry
 
             node.IsLeaf = false;
             var centerOffset = node.Edge / 4;
-            var newEdge = node.Edge / 2;
 
             for (int i = 0; i < 8; i++)
             {
@@ -83,8 +82,8 @@ namespace ToriGeneration.Core.Extensions.Geometry
                     NodeDepth = node.NodeDepth - 1,
                     MaxSpheresCount = node.MaxSpheresCount,
                     IsLeaf = true,
-                    Children = new List<Cube>(),
-                    Spheres = new List<Sphere>()
+                    Children = [],
+                    Spheres = []
                 });
             }
 
@@ -128,12 +127,9 @@ namespace ToriGeneration.Core.Extensions.Geometry
             var maxSpheresCount = maxSpheresPerTorus * parameters.TargetTorusCount;
 
             var depth = 1;
-            var maxPerNode = 0;
-
             while (true)
             {
-                maxPerNode = (int)Math.Ceiling((double)maxSpheresCount / Math.Pow(8, depth));
-
+                int maxPerNode = (int)Math.Ceiling((double)maxSpheresCount / Math.Pow(8, depth));
                 if (maxPerNode <= node.MaxSpheresCount)
                     break;
 
@@ -149,8 +145,8 @@ namespace ToriGeneration.Core.Extensions.Geometry
                 Z = 0
             };
             node.Edge = parameters.CubeEdge;
-            node.Spheres = new List<Sphere>();
-            node.Children = new List<Cube>();
+            node.Spheres = [];
+            node.Children = [];
             node.IsLeaf = true;
         }
 

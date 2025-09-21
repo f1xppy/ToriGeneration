@@ -47,7 +47,13 @@ namespace ToriGeneration.Core.Generators
             var currentAttempts = 0;
 
             var torusList = new List<TorusResponse>();
-            var torus = new Torus();
+            var torus = new Torus { 
+                Center = new Point { X = 0, Y = 0, Z = 0 },
+                Rotation = new Point { X = 0, Y = 0, Z = 0 },
+                MajorRadius = 0,
+                MinorRadius = 0,
+                Spheres = []
+            };
 
             //var testList = new List<Torus>();
 
@@ -56,7 +62,7 @@ namespace ToriGeneration.Core.Generators
                 var hasIntersections = false;
                 do
                 {
-                    torus = await Task.Run(() => generator.GenerateTorus(rootNode, parameters));
+                    torus = await Task.Run(async () => await generator.GenerateTorus(rootNode, parameters));
                     currentAttempts++;
 
                     hasIntersections = false;

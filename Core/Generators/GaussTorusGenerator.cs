@@ -15,7 +15,7 @@ namespace ToriGeneration.Core.Generators
     {
         private readonly Random random = new();
 
-        public async Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters)
+        public Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters)
         {
             var center = new Point
             {
@@ -40,12 +40,12 @@ namespace ToriGeneration.Core.Generators
                 MajorRadius = majorRadius, 
                 MinorRadius = minorRadius, 
                 Rotation = rotation,
-                Spheres = new List<Sphere>()
+                Spheres = []
             };
 
             torus.GeneratePointsOnMajorCircle();
 
-            return torus;
+            return Task.FromResult(torus);
         }
     }
 }

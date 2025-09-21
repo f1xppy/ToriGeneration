@@ -13,7 +13,7 @@ namespace ToriGeneration.Core.Generators
 {
     public class LinearTorusGenerator : ITorusGenerationStrategy
     {
-        public async Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters)
+        public Task<Torus> GenerateTorus(Cube cube, TorusGenerationParameters parameters)
         {
             var random = new Random();
 
@@ -40,12 +40,12 @@ namespace ToriGeneration.Core.Generators
                 MajorRadius = majorRadius, 
                 MinorRadius = minorRadius, 
                 Rotation = rotation,
-                Spheres = new List<Sphere>()
+                Spheres = []
             };
 
             torus.GeneratePointsOnMajorCircle();
 
-            return torus;
+            return Task.FromResult(torus);
         }
     }
 }

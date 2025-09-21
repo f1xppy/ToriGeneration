@@ -8,12 +8,12 @@ namespace ToriGeneration.Core.Models.Dto.Responses
 {
     public class TorusListResponse
     {
-        public List<TorusResponse> TorusList { get; set; }
+        public required List<TorusResponse> TorusList { get; set; }
 
-        public int TotalCount { get; set; }
+        public required int TotalCount { get; set; }
 
-        public double Concentration { get; set; }
+        public required double Concentration { get; set; }
 
-        public TimeSpan ElapsedTime { get; set; } 
+        public required TimeSpan ElapsedTime { get; set; } 
     }
 }
