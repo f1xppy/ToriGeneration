@@ -4,5 +4,6 @@ export type TorusResponse = {
   torusList: Torus[],
   totalCount: number,
   concentration: number,
-  elapsedTime: string
+  elapsedTime: string,
+  maxRetries: number
 }

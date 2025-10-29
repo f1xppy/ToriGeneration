@@ -1,8 +1,16 @@
+using System;
+using ToriGeneration.Core.Configuration;
 using ToriGeneration.DependencyInjector;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+builder.Configuration.AddConfiguration(configuration);
 
 builder.Services.AddCors(options =>
 {
@@ -16,17 +24,20 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.Configure<ToriGenerationConfig>(configuration.GetSection("GenerationConfig"));
+
 builder.Services.AddDependencyInjection();
+
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

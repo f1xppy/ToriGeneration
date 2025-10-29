@@ -137,5 +137,16 @@
       Nc: {{totalConcentration}}<br>
       Elapsed time: {{elapsedTime}}
     </div>
+
+    <!-- Генерация файлов -->
+    <div class="form-group">
+      <label for="filesCount">Files Count:</label>
+      <input id="filesCount" type="number" formControlName="filesCount" class="form-input" min="1">
+    </div>
+
+    <button type="button" class="submit-btn" (click)="generateFiles()" [disabled]="form.get('filesCount')?.invalid">
+      Generate Files
+    </button>
+    <p *ngIf="isGeneratingFiles">{{ fileProgress }}</p>
   </form>
 </div>

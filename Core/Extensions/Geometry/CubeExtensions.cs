@@ -14,9 +14,11 @@ namespace ToriGeneration.Core.Extensions.Geometry
     {
         public static bool Intersects(this Cube node, Sphere sphere)
         {
-            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius >= node.Edge / 2 ||
-                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius >= node.Edge / 2 ||
-                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius >= node.Edge / 2;
+            var halfEdge = node.Edge / 2;
+
+            return Math.Abs(sphere.Center.X - node.Center.X) + sphere.Radius > halfEdge ||
+                   Math.Abs(sphere.Center.Y - node.Center.Y) + sphere.Radius > halfEdge ||
+                   Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius > halfEdge;
         }
 
         public static bool Contains (this Cube node, Sphere sphere)
@@ -26,51 +28,65 @@ namespace ToriGeneration.Core.Extensions.Geometry
                    Math.Abs(sphere.Center.Z - node.Center.Z) + sphere.Radius < node.Edge / 2;
         }
 
-        public static bool ContainsCenter(this Cube node, Sphere sphere)
-        {
-            return Math.Abs(sphere.Center.X - node.Center.X) < node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Y - node.Center.Y) < node.Edge / 2 &&
-                   Math.Abs(sphere.Center.Z - node.Center.Z) < node.Edge / 2;
-        }
-
         public static bool NeedCheck(this Cube node, Sphere sphere)
         {
-            return Math.Abs(sphere.Center.X - node.Center.X) < node.Edge / 2 + sphere.Radius ||
-                   Math.Abs(sphere.Center.Y - node.Center.Y) < node.Edge / 2 + sphere.Radius ||
-                   Math.Abs(sphere.Center.Z - node.Center.Z) < node.Edge / 2 + sphere.Radius;
+            var sphereMinX = sphere.Center.X - sphere.Radius;
+            var sphereMaxX = sphere.Center.X + sphere.Radius;
+            var sphereMinY = sphere.Center.Y - sphere.Radius;
+            var sphereMaxY = sphere.Center.Y + sphere.Radius;
+            var sphereMinZ = sphere.Center.Z - sphere.Radius;
+            var sphereMaxZ = sphere.Center.Z + sphere.Radius;
+
+            return !(sphereMaxX < node.MinX || sphereMinX > node.MaxX ||
+                     sphereMaxY < node.MinY || sphereMinY > node.MaxY ||
+                     sphereMaxZ < node.MinZ || sphereMinZ > node.MaxZ);
         }
 
         public static bool SpheresIntersectsWith(this Cube node, Sphere sphere)
         {
-            foreach (Sphere other in node.Spheres)
-            {
-                if (sphere.IntersectsWith(other))
-                    return true;
-            }
+            var stack = new Stack<Cube>();
+            stack.Push(node);
 
-            if (!node.IsLeaf)
+            while (stack.Count > 0)
             {
-                foreach (var child in node.Children)
+                var currentNode = stack.Pop();
+
+                if (currentNode.Spheres != null && currentNode.Spheres.Count > 0)
                 {
-                    if (child.NeedCheck(sphere))
-                        if (child.SpheresIntersectsWith(sphere))
+                    foreach (var other in currentNode.Spheres)
+                    {
+                        if (sphere.IntersectsWith(other))
                             return true;
+                    }
+                }
+
+                if (!currentNode.IsLeaf && currentNode.Children != null)
+                {
+                    for (int i = currentNode.Children.Count - 1; i >= 0; i--)
+                    {
+                        var child = currentNode.Children[i];
+                        if (child.NeedCheck(sphere))
+                        {
+                            stack.Push(child);
+                        }
+                    }
                 }
             }
 
             return false;
         }
 
-        public static void Subdivide(this Cube node)
+        public static void Subdivide(this Cube node, List<Sphere> newSpheres)
         {
             if (node.NodeDepth == 1) return;
 
             node.IsLeaf = false;
             var centerOffset = node.Edge / 4;
 
+            node.Children = new List<Cube>(8);
             for (int i = 0; i < 8; i++)
             {
-                node.Children.Add(new Cube
+                var child = new Cube
                 {
                     Edge = node.Edge / 2,
                     Center = new Point
@@ -82,42 +98,29 @@ namespace ToriGeneration.Core.Extensions.Geometry
                     NodeDepth = node.NodeDepth - 1,
                     MaxSpheresCount = node.MaxSpheresCount,
                     IsLeaf = true,
-                    Children = [],
-                    Spheres = []
-                });
+                    Children = new List<Cube>(),
+                    Spheres = new List<Sphere>()
+                };
+
+                child.ComputeBounds();
+
+                node.Children.Add(child);
             }
 
-            // Собираем сферы для перемещения
-            var spheresToMove = new List<Sphere>();
-            foreach (var sphere in node.Spheres)
-            {
-                foreach (var child in node.Children)
-                {
-                    if (child.Contains(sphere))
-                    {
-                        spheresToMove.Add(sphere);
-                        break;
-                    }
-                }
-            }
+            var allSpheres = new List<Sphere>();
+            if (node.Spheres != null && node.Spheres.Count > 0)
+                allSpheres.AddRange(node.Spheres);
+            if (newSpheres != null && newSpheres.Count > 0)
+                allSpheres.AddRange(newSpheres);
 
-            // Перемещаем сферы в children
-            foreach (var sphere in spheresToMove)
-            {
-                node.Spheres.Remove(sphere);
-                foreach (var child in node.Children)
-                {
-                    if (child.Contains(sphere))
-                    {
-                        child.Spheres.Add(sphere);
-                    }
-                }
-            }
+            node.Spheres?.Clear();
+
+            DistributeSpheres(node, allSpheres);
         }
 
         public static void InitializeNodeParameters (this Cube node, TorusGenerationParameters parameters)
         {
-            node.MaxSpheresCount = 30;
+            node.MaxSpheresCount = 10;
 
             var maxTorusMajorRadius = parameters.MaxTorusRadius - parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
             var maxTorusMinorRadius = parameters.TorusThicknessCoefficient * parameters.MaxTorusRadius;
@@ -150,30 +153,181 @@ namespace ToriGeneration.Core.Extensions.Geometry
             node.IsLeaf = true;
         }
 
-        public static void Insert(this Cube node, Sphere sphere)
+        public static void InsertBatch(this Cube node, List<Sphere> spheres)
         {
-            if (node.IsLeaf && (node.Spheres.Count < node.MaxSpheresCount))
-            {
-                node.Spheres.Add(sphere);
+            if (spheres == null || spheres.Count == 0)
                 return;
-            }
 
-            if (node.IsLeaf)
-            {
-                node.Subdivide();
-            }
+            var queue = new Queue<(Cube node, List<Sphere> spheres)>();
+            queue.Enqueue((node, spheres));
 
-            foreach (var child in node.Children)
+            while (queue.Count > 0)
             {
-                if (child.Contains(sphere))
+                var (currentNode, currentSpheres) = queue.Dequeue();
+
+                if (currentNode.IsLeaf &&
+                    currentNode.Spheres.Count + currentSpheres.Count <= currentNode.MaxSpheresCount)
                 {
-                    child.Insert(sphere);
-                    return;
+                    currentNode.Spheres.AddRange(currentSpheres);
+                    continue;
+                }
+
+                if (currentNode.IsLeaf)
+                {
+                    currentNode.Subdivide(currentSpheres);
+                }
+                else
+                {
+                    DistributeSpheresToChildren(currentNode, currentSpheres, queue);
+                }
+            }
+        }
+
+        private static void DistributeSpheres(Cube node, List<Sphere> spheres)
+        {
+            var childSpheres = new List<Sphere>[8];
+            for (int i = 0; i < 8; i++)
+                childSpheres[i] = new List<Sphere>();
+
+            var remainingSpheres = new List<Sphere>();
+
+            foreach (var sphere in spheres)
+            {
+                bool placedInChild = false;
+
+                for (int i = 0; i < 8; i++)
+                {
+                    if (node.Children[i].Contains(sphere))
+                    {
+                        childSpheres[i].Add(sphere);
+                        placedInChild = true;
+                        break;
+                    }
+                }
+
+                if (!placedInChild)
+                    remainingSpheres.Add(sphere);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                if (childSpheres[i].Count > 0)
+                {
+                    node.Children[i].Spheres.AddRange(childSpheres[i]);
                 }
             }
 
-            // Если сфера перекрывает несколько подузлов, она остаётся в текущем узле
-            node.Spheres.Add(sphere);
+            if (remainingSpheres.Count > 0)
+            {
+                node.Spheres.AddRange(remainingSpheres);
+            }
+        }
+
+        private static void DistributeSpheresToChildren(Cube node, List<Sphere> spheres,
+    Queue<(Cube node, List<Sphere> spheres)> queue)
+        {
+            var childSpheres = new List<Sphere>[8];
+            for (int i = 0; i < 8; i++)
+                childSpheres[i] = new List<Sphere>();
+
+            var remainingSpheres = new List<Sphere>();
+
+            foreach (var sphere in spheres)
+            {
+                bool placedInChild = false;
+
+                for (int i = 0; i < 8; i++)
+                {
+                    if (node.Children[i].Contains(sphere))
+                    {
+                        childSpheres[i].Add(sphere);
+                        placedInChild = true;
+                        break;
+                    }
+                }
+
+                if (!placedInChild)
+                    remainingSpheres.Add(sphere);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                if (childSpheres[i].Count > 0)
+                {
+                    queue.Enqueue((node.Children[i], childSpheres[i]));
+                }
+            }
+
+            if (remainingSpheres.Count > 0)
+            {
+                node.Spheres.AddRange(remainingSpheres);
+            }
+        }
+
+        public static bool CheckIntersectionsParallel(this Cube rootNode, List<Sphere> spheres, int batchSize)
+        {
+            var hasIntersections = false;
+            var totalSpheres = spheres.Count;
+
+            Parallel.For(0, (int)Math.Ceiling((double)totalSpheres / batchSize), (batchIndex, state) =>
+            {
+                var start = batchIndex * batchSize;
+                var end = Math.Min(start + batchSize, totalSpheres);
+
+                for (int i = start; i < end; i++)
+                {
+                    if (hasIntersections)
+                    {
+                        state.Stop();
+                        return;
+                    }
+
+                    var sphere = spheres[i];
+
+                    if (rootNode.Intersects(sphere))
+                    {
+                        hasIntersections = true;
+                        state.Stop();
+                        return;
+                    }
+
+                    if (rootNode.SpheresIntersectsWith(sphere))
+                    {
+                        hasIntersections = true;
+                        state.Stop();
+                        return;
+                    }
+                }
+            });
+
+            return hasIntersections;
+        }
+
+        public static List<Torus> CheckBatchIntersections(this Cube rootNode, List<Torus> torusBatch)
+        {
+            var validTorusList = new List<Torus>();
+            var spheresCache = new List<Sphere>[torusBatch.Count];
+
+            Parallel.For(0, torusBatch.Count, i =>
+            {
+                spheresCache[i] = torusBatch[i].Spheres.ToList();
+            });
+
+            Parallel.For(0, torusBatch.Count, i =>
+            {
+                var torus = torusBatch[i];
+                var spheres = spheresCache[i];
+
+                if (!rootNode.CheckIntersectionsParallel(spheres, 50))
+                {
+                    lock (validTorusList)
+                    {
+                        validTorusList.Add(torus);
+                    }
+                }
+            });
+
+            return validTorusList;
         }
     }
 }

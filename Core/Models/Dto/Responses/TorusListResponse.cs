@@ -15,5 +15,9 @@ namespace ToriGeneration.Core.Models.Dto.Responses
         public required double Concentration { get; set; }
 
         public required TimeSpan ElapsedTime { get; set; } 
+
+        public required int MaxRetries { get; set; }
+
+        public required double MaxRadius { get; set; }
     }
 }

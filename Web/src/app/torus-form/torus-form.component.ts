@@ -1,6 +1,6 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 export interface TorusFormData {
   cubeEdge: number;
@@ -9,12 +9,13 @@ export interface TorusFormData {
   thicknessCoefficient: number;
   targetTorusCount: number;
   generationMethod: number;
+  generateFilesCount?: number; // для Generate Files
 }
 
 @Component({
   selector: 'app-torus-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './torus-form.component.html',
   styleUrls: ['./torus-form.component.css']
 })
@@ -25,11 +26,16 @@ export class TorusFormComponent {
   torusCount!: number;
   totalConcentration!: string;
   elapsedTime!: string;
+  maxRetries!: number;
   showInfo: boolean = false;
 
   @Input() isPanelVisible: boolean = true;
   @Output() formSubmit = new EventEmitter<TorusFormData>();
   @Output() panelToggle = new EventEmitter<boolean>();
+
+  filesCount: number = 1;                  // обязательно начальное значение
+  fileProgress: string = '';
+  isGeneratingFiles: boolean = false;
 
   constructor(private fb: FormBuilder) {
     this.form = this.createForm();
@@ -63,14 +69,15 @@ export class TorusFormComponent {
         Validators.pattern(/^-?\d*\.?\d+$/),
         Validators.min(1)
       ]],
-      generationMethod: ['1', Validators.required]
+      generationMethod: ['1', Validators.required],
+      filesCount: ['1', [Validators.required, Validators.min(1)]]
     });
   }
 
   onSubmit(): void {
     if (this.form.valid) {
       const formData = this.form.value;
-      const formDataTyped: TorusFormData = {
+      const typedData: TorusFormData = {
         cubeEdge: Number(formData.cubeEdge),
         min_R: Number(formData.min_R),
         max_R: Number(formData.max_R),
@@ -78,11 +85,19 @@ export class TorusFormComponent {
         targetTorusCount: Number(formData.targetTorusCount),
         generationMethod: Number(formData.generationMethod)
       };
-
-      this.formSubmit.emit(formDataTyped);
+      this.formSubmit.emit(typedData);
     } else {
       this.form.markAllAsTouched();
     }
+  }
+
+  generateFiles(): void {
+    const count = Number(this.form.get('filesCount')?.value);
+    if (count < 1) return;
+
+    this.isGeneratingFiles = true;
+    this.fileProgress = 'Starting...';
+    this.formSubmit.emit({ generateFilesCount: count } as TorusFormData);
   }
 
   fillInitialValues(): void {

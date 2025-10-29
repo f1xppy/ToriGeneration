@@ -11,6 +11,6 @@ namespace ToriGeneration.Core.Abstract.Generators
 {
     public interface ITorusListGenerator
     {
-        Task<TorusListResponse> GenerateTorusList(TorusGenerationParameters parameters, Cube rootNode);
+        Task<TorusListResponse> GenerateTorusList(TorusGenerationParameters parameters, Cube rootNode, string cacheKey = "");
     }
 }
